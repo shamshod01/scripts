@@ -1,3 +1,12 @@
+/***********************************************************************
+ Snapshot of NFT contract on Klaytn chain
+ 
+ set contractAddress to (stringify) Smart Contract Address on line 14
+ uncomment line 62;
+ 
+ Author: Shamshod
+ ***********************************************************************/
+
 const path = require("path");
 const axios = require('axios');
 const fs = require("fs");
@@ -7,36 +16,38 @@ const contractAddress = '';
  @param contractAddress : string Target contract address
 
  Function below fetches list of NFT holders from klaytn scope by contract address,
- gets address of holders of 5 and 10 NFT and saves to ./snapshot/holders5.json and ./snapshot/holders10.json
+ gets address of holders of nftCount1 and nftCount2 NFT and saves to ./snapshot/holders{nftCount2}.json and ./snapshot/holders{nftCount2}.json
 
  */
 async function getData(contractAddress) {
-    const holders5 = [];
-    const holders10 = [];
+    const holders1 = [];
+    const holders2 = [];
+    const nftCount1 = 5;
+    const nftCount2 = 10;
     const res = await axios.get(`https://api-cypress-v2.scope.klaytn.com/v2/tokens/${contractAddress}/holders?page=1`, {headers: {'origin': 'https://scope.klaytn.com'}});
 
     console.log(res.data);
 
     res.data?.result?.map(e => {
-        if (Number(e.tokenCount) === 10) {
+        if (Number(e.tokenCount) === nftCount2) {
             holders10.push(e.address)
         }
-        if (Number(e.tokenCount) === 5) {
+        if (Number(e.tokenCount) === nftCount1) {
             holders5.push(e.address)
         }
     })
 
     for (let i = 2; i < res.data.total / res.data.limit; i++) {
         const res = await axios.get(`https://api-cypress-v2.scope.klaytn.com/v2/tokens/${contractAddress}/holders?page=${i}`, {headers: {'origin': 'https://scope.klaytn.com'}});
-        if (Number(res.data.result[0].tokenCount) < 5) { // suppose that data sorted by tokenCount
+        if (Number(res.data.result[0].tokenCount) < nftCount1) { // suppose that data sorted by tokenCount
             break;
         }
         console.log(res.data, i);
         res.data.result.map(e => {
-            if (Number(e.tokenCount) === 10) {
+            if (Number(e.tokenCount) === nftCount2) {
                 holders10.push(e.address)
             }
-            if (Number(e.tokenCount) === 5) {
+            if (Number(e.tokenCount) === nftCount1) {
                 holders5.push(e.address)
             }
         })
@@ -45,8 +56,8 @@ async function getData(contractAddress) {
 
     let location = path.join(__dirname, './snapshot');
     fs.mkdirSync(location, { recursive: true });
-    fs.writeFileSync(`/${location}/holders5.json`, JSON.stringify(holders5));
-    fs.writeFileSync(`/${location}/holders10.json`, JSON.stringify(holders10));
+    fs.writeFileSync(`/${location}/holders${nftCount1}.json`, JSON.stringify(holders1));
+    fs.writeFileSync(`/${location}/holders${nftCount2}.json`, JSON.stringify(holders2));
 }
 
 
